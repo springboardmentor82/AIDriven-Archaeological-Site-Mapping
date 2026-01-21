@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArchaeoAI - Archaeological Site Mapping</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+            alt="ArchaeoAI Logo"
+            class="nav-logo"
+          />
+          <span class="gradient-text">ArchaeoAI Mapper</span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="#"
+                ><i class="fas fa-home"></i> Dashboard</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="fas fa-history"></i> History</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="fas fa-chart-bar"></i> Reports</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="fas fa-cog"></i> Settings</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="fas fa-question-circle"></i> Help</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar Toggle for Mobile -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <i class="fas fa-bars fa-lg"></i>
+    </button>
+
+    <!-- Control Panel Toggle for Mobile -->
+    <button class="control-panel-toggle" id="controlPanelToggle">
+      <i class="fas fa-map-marked-alt fa-lg"></i>
+    </button>
+
+    <div class="container-fluid p-0">
+      <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-xl-2 sidebar" id="sidebar">
+          <div class="sidebar-header">
+            <h4 class="mb-1">
+              <i class="fas fa-tools me-2"></i>Processing Tools
+            </h4>
+            <p class="text-light mb-0" style="opacity: 0.8">
+              Upload and process archaeological site imagery
+            </p>
+          </div>
+
+          <div class="sidebar-content">
+            <!-- File Upload Section -->
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-upload me-2"></i>Image Upload
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label"
+                    >Select Archaeological Site Image</label
+                  >
+                  <div class="file-upload-area" id="fileUploadArea">
+                    <i
+                      class="fas fa-cloud-upload-alt fa-3x mb-3"
+                      style="opacity: 0.7"
+                    ></i>
+                    <p class="mb-2">Click to browse or drag & drop</p>
+                    <small class="text-light" style="opacity: 0.6"
+                      >Supports JPG, PNG, TIFF formats</small
+                    >
+                  </div>
+                  <input
+                    type="file"
+                    class="form-control d-none"
+                    id="imageUpload"
+                    accept=".jpg,.jpeg,.png,.tif,.tiff"
+                  />
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                  <button class="btn btn-success" id="uploadBtn" disabled>
+                    <i class="fas fa-cloud-upload-alt me-2"></i> Upload &
+                    Process Image
+                  </button>
+                </div>
+                <div
+                  class="progress-container mt-3"
+                  id="uploadProgress"
+                  style="display: none"
+                >
+                  <div class="progress">
+                    <div
+                      class="progress-bar progress-bar-striped progress-bar-animated"
+                      role="progressbar"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                  <small
+                    class="text-light mt-2 d-block"
+                    id="uploadStatus"
+                    style="opacity: 0.8"
+                    >Uploading...</small
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Processing Tools -->
+            <div class="card">
+              <div class="card-header bg-success text-white">
+                <i class="fas fa-robot me-2"></i>AI Processing Tools
+              </div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <button class="btn btn-info mb-2" id="segmentBtn" disabled>
+                    <i class="fas fa-mountain me-2"></i> Segment Site Features
+                  </button>
+
+                  <button class="btn btn-warning mb-2" id="detectBtn" disabled>
+                    <i class="fas fa-search me-2"></i> Detect Artifacts
+                  </button>
+
+                  <button class="btn btn-danger" id="allBtn" disabled>
+                    <i class="fas fa-play-circle me-2"></i> Run All Processes
+                  </button>
+                </div>
+
+                <div class="mt-3">
+                  <small class="text-light" style="opacity: 0.7">
+                    <i class="fas fa-info-circle me-2"></i> Uses advanced
+                    computer vision algorithms for archaeological analysis.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Processing Status -->
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-spinner me-2"></i>Processing Status
+              </div>
+              <div class="card-body">
+                <div
+                  class="progress-container"
+                  id="processingProgress"
+                  style="display: none"
+                >
+                  <div class="progress">
+                    <div
+                      class="progress-bar progress-bar-striped progress-bar-animated"
+                      role="progressbar"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                  <small
+                    class="text-light mt-2 d-block"
+                    id="processingStatus"
+                    style="opacity: 0.8"
+                    >Processing...</small
+                  >
+                </div>
+                <div
+                  class="text-center mt-3"
+                  id="statusMessage"
+                  style="display: none"
+                >
+                  <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                  <p class="text-light mb-0" style="opacity: 0.8">
+                    Processing Complete!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="card">
+              <div
+                class="card-header d-flex justify-content-between align-items-center"
+              >
+                <span
+                  ><i class="fas fa-chart-bar me-2"></i>Processing Results</span
+                >
+                <button
+                  class="btn btn-sm btn-outline-light"
+                  id="clearResultsBtn"
+                >
+                  <i class="fas fa-trash me-1"></i> Clear
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="resultsContainer">
+                  <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x mb-3" style="opacity: 0.3"></i>
+                    <p class="text-light mb-0" style="opacity: 0.6">
+                      No results yet.<br />Upload an image and run processing
+                      tools.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-download me-2"></i>Export Results
+              </div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <button
+                    class="btn btn-outline-light mb-2"
+                    id="exportGeoJSONBtn"
+                  >
+                    <i class="fas fa-file-code me-2"></i> GeoJSON
+                  </button>
+                  <button class="btn btn-outline-light mb-2" id="exportCSVBtn">
+                    <i class="fas fa-file-csv me-2"></i> CSV Report
+                  </button>
+                  <button class="btn btn-outline-light" id="exportPDFBtn">
+                    <i class="fas fa-file-pdf me-2"></i> PDF Report
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-info-circle me-2"></i>System Information
+              </div>
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="me-3">
+                    <div
+                      class="spinner"
+                      style="width: 30px; height: 30px"
+                    ></div>
+                  </div>
+                  <div>
+                    <small class="text-light d-block" style="opacity: 0.9"
+                      >Checking backend status...</small
+                    >
+                    <small
+                      class="text-light"
+                      style="opacity: 0.6"
+                      id="backendStatus"
+                      >Checking...</small
+                    >
+                  </div>
+                </div>
+                <small class="text-light d-block" style="opacity: 0.7">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <span>Artifact detection available offline</span>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Map Area -->
+        <div class="col-lg-9 col-xl-10">
+          <div id="map"></div>
+
+          <!-- Unified Control Panel -->
+          <div class="control-panel">
+            <div class="control-panel-header">
+              <h5 class="control-panel-title">
+                <i class="fas fa-map-marked-alt me-2"></i>Map Controls
+              </h5>
+            </div>
+
+            <div class="control-panel-body">
+              <!-- Current Image Info -->
+              <div class="control-section">
+                <div class="current-image-info">
+                  <div class="current-image-header">
+                    <i class="fas fa-image"></i>
+                    <h6>Current Image</h6>
+                  </div>
+                  <div class="current-image-details">
+                    <div class="current-image-name" id="currentImageInfo">
+                      No image loaded
+                    </div>
+                    <div class="current-image-stats">
+                      <span class="current-image-mode" id="processingMode">
+                        Offline Mode
+                      </span>
+                      <span class="current-image-size" id="imageStats">
+                        0 MB
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Map Layers Section -->
+              <div class="control-section">
+                <h6>
+                  <i class="fas fa-layer-group"></i>
+                  Map Layers
+                </h6>
+                <div class="map-layers">
+                  <div class="layer-control">
+                    <label class="layer-label">
+                      <div
+                        class="layer-color"
+                        style="
+                          background: linear-gradient(135deg, #ff9900, #ff5500);
+                        "
+                      ></div>
+                      <span>Segmentation Results</span>
+                    </label>
+                    <label class="layer-switch">
+                      <input type="checkbox" id="showSegmentation" />
+                      <span class="layer-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="layer-control">
+                    <label class="layer-label">
+                      <div
+                        class="layer-color"
+                        style="
+                          background: linear-gradient(135deg, #00ff00, #00cc00);
+                        "
+                      ></div>
+                      <span>Artifact Detections</span>
+                    </label>
+                    <label class="layer-switch">
+                      <input type="checkbox" id="showDetection" checked />
+                      <span class="layer-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="layer-control">
+                    <label class="layer-label">
+                      <div
+                        class="layer-color"
+                        style="
+                          background: linear-gradient(135deg, #666666, #444444);
+                        "
+                      ></div>
+                      <span>Satellite View</span>
+                    </label>
+                    <label class="layer-switch">
+                      <input type="checkbox" id="showBaseMap" checked />
+                      <span class="layer-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Map Legend Section -->
+              <div class="control-section">
+                <h6>
+                  <i class="fas fa-key"></i>
+                  Map Legend
+                </h6>
+                <div class="map-legend">
+                  <div class="legend-item">
+                    <div class="legend-color-box">
+                      <div
+                        class="legend-color"
+                        style="
+                          background: linear-gradient(135deg, #ff9900, #ff5500);
+                        "
+                      ></div>
+                    </div>
+                    <span class="legend-label">Detected Artifacts</span>
+                    <span class="legend-value" id="legendArtifacts">0</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <div class="legend-color-box">
+                      <div
+                        class="legend-color"
+                        style="
+                          background: linear-gradient(135deg, #ff7800, #cc5500);
+                        "
+                      ></div>
+                    </div>
+                    <span class="legend-label">Ancient Ruins</span>
+                    <span class="legend-value" id="legendRuins">0%</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <div class="legend-color-box">
+                      <div
+                        class="legend-color"
+                        style="
+                          background: linear-gradient(135deg, #00ff00, #00cc00);
+                        "
+                      ></div>
+                    </div>
+                    <span class="legend-label">Vegetation Areas</span>
+                    <span class="legend-value" id="legendVegetation">0%</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <div class="legend-color-box">
+                      <div
+                        class="legend-color"
+                        style="
+                          background: linear-gradient(135deg, #3498db, #2980b9);
+                        "
+                      ></div>
+                    </div>
+                    <span class="legend-label">Water Bodies</span>
+                    <span class="legend-value" id="legendWater">0%</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <div class="legend-color-box">
+                      <div
+                        class="legend-color"
+                        style="
+                          background: linear-gradient(135deg, #9b59b6, #8e44ad);
+                        "
+                      ></div>
+                    </div>
+                    <span class="legend-label">Structural Features</span>
+                    <span class="legend-value" id="legendStructures">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Map Scale -->
+              <div class="control-section">
+                <h6>
+                  <i class="fas fa-ruler"></i>
+                  Map Scale
+                </h6>
+                <div class="map-scale-container">
+                  <div class="map-scale-label">Current Scale</div>
+                  <div class="map-scale-value" id="mapScale">1:1000</div>
+                </div>
+              </div>
+
+              <!-- Fit to Image Button -->
+              <button class="fit-image-btn" id="fitBoundsBtn">
+                <i class="fas fa-expand-alt me-2"></i>
+                Fit to Image Bounds
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+      <div id="notificationToast" class="toast" role="alert">
+        <div class="toast-header bg-primary text-white">
+          <strong class="me-auto" id="toastTitle"
+            ><i class="fas fa-bell me-2"></i>Notification</strong
+          >
+          <small class="text-white">Just now</small>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+          This is a notification message.
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Results Details -->
+    <div class="modal fade" id="resultsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="modalTitle">
+              <i class="fas fa-chart-bar me-2"></i>Processing Results
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <!-- Detailed results will be loaded here -->
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              <i class="fas fa-times me-2"></i> Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="downloadReportBtn"
+            >
+              <i class="fas fa-download me-2"></i> Download Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Improved Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-content">
+        <div class="enhanced-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+
+        <h4 id="loadingTitle">Processing Image</h4>
+        <p class="text-light mb-4" id="loadingText">
+          Please wait while we analyze the image...
+        </p>
+
+        <div class="loading-steps" id="loadingSteps">
+          <!-- Steps will be inserted dynamically -->
+        </div>
+
+        <div class="progress-indicator">
+          <div class="progress-fill" id="loadingProgress"></div>
+        </div>
+
+        <small class="text-light mt-3 d-block" style="opacity: 0.6">
+          <i class="fas fa-clock me-2"></i>
+          <span id="loadingTime">Estimated time: 15-30 seconds</span>
+        </small>
+      </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="js/app.js"></script>
+  </body>
+</html>
